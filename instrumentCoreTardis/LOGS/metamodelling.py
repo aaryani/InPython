@@ -86,46 +86,59 @@ def echo(mod, klass, fn, write=sys.stdout.write):
 	    	caller_line = frame.f_back.f_code.co_firstlineno
 	    	caller = '%s.%s' % (caller_mod, caller_line)
 		caller_found = False
+		callee_appended = False
 		callee_string = ''
+		test_1 = caller_mod
+		try:
+			starting_module_1 = caller_mod.rsplit('/', 1)[1]
+		except:
+			starting_module_1 = ''
+		try:
+			starting_module_2 = caller_mod.rsplit('.', 1)[1]
+		except:
+			starting_module_2 = ''
 		#in case of an un-annotated function called this functin -> determine which was the last annotated function		
 		while not caller_found:
-#			print caller
-			if starting_module in caller:
-				caller = ' start'
+			if 'unittest' in caller_mod:
+				caller_found = True
+				callee_appended = True				
+			elif (starting_module_1.startswith('test') and not (starting_module_1 == 'testcases')) or (starting_module_2.startswith('test') and not (starting_module_2 == 'testcases')):
+				log_list.append(' ')
+				log_list.append(' %s %s' % (caller_mod, caller_line))
+				log_list.append(' start')
+				callee_string = callee_string + '+ %s' % func_id
+				log_list.append(callee_string)
+				callee_appended = True
 				caller_found = True
 			elif caller in all_functions:
-	    			column = all_functions.index(caller)
-	    			caller = functions_dict[column]
+				column = all_functions.index(caller)
+				caller = functions_dict[column]
 				caller_found = True
-			else:	
+			else :
+				frame = frame.f_back
+				caller_mod = frame.f_back.f_code.co_filename.rsplit('.', 1)[0]
+				caller_line = frame.f_back.f_code.co_firstlineno
+				caller = '%s.%s' % (caller_mod, caller_line)
+				callee_string = callee_string + '-'
 				try:
-					frame = frame.f_back
-					caller_mod = frame.f_back.f_code.co_filename.rsplit('.', 1)[0]
-			    		caller_line = frame.f_back.f_code.co_firstlineno
-			    		caller = '%s.%s' % (caller_mod, caller_line)
-					callee_string = callee_string + '+'
-
-				## needed only for tests 
+					starting_module_1 = caller_mod.rsplit('/', 1)[1]
 				except:
-					caller = ' start'
-					caller_found = True
+					starting_module_1 = ''
+				try:
+					starting_module_2 = caller_mod.rsplit('.', 1)[1]
+				except:
+					starting_module_2 = ''
 		# update log_list:
-		found = False
 		length = len(log_list) - 1
-		while not found:
-	    	    if caller == ' start':
-			log_list.append(' start')
-			callee_string = callee_string + '+ %s' % func_id
+		while not callee_appended:
+	    	    if caller == log_list[length].rsplit(' ', 1)[1]:
+			callee_string = callee_string + '%s+ %s' % (log_list[length].rsplit(' ', 1)[0],func_id)
 			log_list.append(callee_string)
-			found = True
-	    	    elif caller == log_list[length].rsplit(' ', 1)[1]:
-			callee_string = callee_string +  '%s+ %s' % (log_list[length].rsplit(' ', 1)[0], func_id)
-			log_list.append(callee_string)
-			found = True
-		    elif length > 1: 
+			callee_appended = True
+		    elif not (log_list[length] == ' start'):
 			length = length - 1
 		    else: 
-			found = True
+			callee_appended = True
 		
         	return fn(*v, **k)
     	return wrapped
@@ -179,28 +192,19 @@ log_list.append(' start')
 
 #instrument functions by echoing all modules
 from tardis import echo_all
-#from tardis.tardis_portal.tests.meta_check.Logs import echoing
-
-
-
 
 func_length = len(all_functions)
 print ('# Functions: %s' % len(all_functions))
 
-# initialise 'starting_module' and start the program  
-#starting_module = 'test_authentication'
-#from tardis.tardis_portal.tests.test_authentication import AuthenticationTestCase
-#from tardis.tardis_portal.tests.meta_check.Logs import check
 
 
-##For the tests it looks like that
-#from django.core.management import ManagementUtility
-#
-#utility = ManagementUtility(None)
-#utility.execute()
+##For the tests it looks like that##
+from django.core.management import ManagementUtility
+utility = ManagementUtility(None)
+utility.execute()
 
 
-path_name = 'tardis/Logs/OutputFiles/'
+path_name = 'tardis/LOGS/OutputFiles/'
 log_f_name = path_name + 'logs.txt'
 log_f = file(log_f_name, 'w')
 
@@ -208,4 +212,4 @@ print ('\n Log-File:')
 for i in range(0,len(log_list)):
     log_f.writelines("%s \n" % log_list[i])
 
-#log_f.close()
+log_f.close()
