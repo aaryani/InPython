@@ -2,6 +2,13 @@ import inspect
 import sys
 import os
 import functools
+import logging
+
+logger = logging.getLogger('logs')
+hdlr = logging.FileHandler('tardis/LOGS/OutputFiles/log.txt')
+logger.addHandler(hdlr)
+logger.setLevel(logging.INFO)
+
 
 def name(item):
     " Return an item's name. "
@@ -103,10 +110,14 @@ def echo(mod, klass, fn, write=sys.stdout.write):
 				caller_found = True
 				callee_appended = True				
 			elif (starting_module_1.startswith('test') and not (starting_module_1 == 'testcases')) or (starting_module_2.startswith('test') and not (starting_module_2 == 'testcases')):
+				logger.info(' ')
 				log_list.append(' ')
+				logger.info(' %s %s' % (caller_mod, caller_line))
 				log_list.append(' %s %s' % (caller_mod, caller_line))
+				logger.info(' start')
 				log_list.append(' start')
 				callee_string = callee_string + '+ %s' % func_id
+				logger.info(callee_string)
 				log_list.append(callee_string)
 				callee_appended = True
 				caller_found = True
@@ -133,6 +144,7 @@ def echo(mod, klass, fn, write=sys.stdout.write):
 		while not callee_appended:
 	    	    if caller == log_list[length].rsplit(' ', 1)[1]:
 			callee_string = callee_string + '%s+ %s' % (log_list[length].rsplit(' ', 1)[0],func_id)
+			logger.info(callee_string)
 			log_list.append(callee_string)
 			callee_appended = True
 		    elif not (log_list[length] == ' start'):
@@ -207,9 +219,3 @@ utility.execute()
 path_name = 'tardis/LOGS/OutputFiles/'
 log_f_name = path_name + 'logs.txt'
 log_f = file(log_f_name, 'w')
-
-print ('\n Log-File:')
-for i in range(0,len(log_list)):
-    log_f.writelines("%s \n" % log_list[i])
-
-log_f.close()
