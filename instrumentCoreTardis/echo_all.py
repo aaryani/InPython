@@ -1,5 +1,5 @@
 #import djangorecipe.manage
-from tardis.import_module import *
+#from tardis.import_module import *
 
 #from tardis.checking import echo_module
 
